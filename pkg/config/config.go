@@ -116,6 +116,7 @@ type Homebrew struct {
 type Scoop struct {
 	Name                  string       `yaml:",omitempty"`
 	Bucket                RepoRef      `yaml:",omitempty"`
+	Folder                string       `yaml:",omitempty"`
 	CommitAuthor          CommitAuthor `yaml:"commit_author,omitempty"`
 	CommitMessageTemplate string       `yaml:"commit_msg_template,omitempty"`
 	Homepage              string       `yaml:",omitempty"`
@@ -183,26 +184,28 @@ func (a *FlagArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Build contains the build configuration section.
 type Build struct {
-	ID           string         `yaml:",omitempty"`
-	Goos         []string       `yaml:",omitempty"`
-	Goarch       []string       `yaml:",omitempty"`
-	Goarm        []string       `yaml:",omitempty"`
-	Gomips       []string       `yaml:",omitempty"`
-	Targets      []string       `yaml:",omitempty"`
-	Ignore       []IgnoredBuild `yaml:",omitempty"`
-	Dir          string         `yaml:",omitempty"`
-	Main         string         `yaml:",omitempty"`
-	Ldflags      StringArray    `yaml:",omitempty"`
-	Flags        FlagArray      `yaml:",omitempty"`
-	Binary       string         `yaml:",omitempty"`
-	Hooks        HookConfig     `yaml:",omitempty"`
-	Env          []string       `yaml:",omitempty"`
-	Lang         string         `yaml:",omitempty"`
-	Asmflags     StringArray    `yaml:",omitempty"`
-	Gcflags      StringArray    `yaml:",omitempty"`
-	ModTimestamp string         `yaml:"mod_timestamp,omitempty"`
-	Skip         bool           `yaml:",omitempty"`
-	GoBinary     string         `yaml:",omitempty"`
+	ID              string         `yaml:",omitempty"`
+	Goos            []string       `yaml:",omitempty"`
+	Goarch          []string       `yaml:",omitempty"`
+	Goarm           []string       `yaml:",omitempty"`
+	Gomips          []string       `yaml:",omitempty"`
+	Targets         []string       `yaml:",omitempty"`
+	Ignore          []IgnoredBuild `yaml:",omitempty"`
+	Dir             string         `yaml:",omitempty"`
+	Main            string         `yaml:",omitempty"`
+	Ldflags         StringArray    `yaml:",omitempty"`
+	Tags            FlagArray      `yaml:",omitempty"`
+	Flags           FlagArray      `yaml:",omitempty"`
+	Binary          string         `yaml:",omitempty"`
+	Hooks           HookConfig     `yaml:",omitempty"`
+	Env             []string       `yaml:",omitempty"`
+	Lang            string         `yaml:",omitempty"`
+	Asmflags        StringArray    `yaml:",omitempty"`
+	Gcflags         StringArray    `yaml:",omitempty"`
+	ModTimestamp    string         `yaml:"mod_timestamp,omitempty"`
+	Skip            bool           `yaml:",omitempty"`
+	GoBinary        string         `yaml:",omitempty"`
+	NoUniqueDistDir bool           `yaml:"no_unique_dist_dir,omitempty"`
 }
 
 type HookConfig struct {
@@ -342,13 +345,11 @@ type NFPMRPMScripts struct {
 
 // NFPMRPM is custom configs that are only available on RPM packages.
 type NFPMRPM struct {
-	Summary              string            `yaml:"summary,omitempty"`
-	Group                string            `yaml:"group,omitempty"`
-	Compression          string            `yaml:"compression,omitempty"`
-	ConfigNoReplaceFiles map[string]string `yaml:"config_noreplace_files,omitempty"` // deprecated: use contents instead
-	GhostFiles           []string          `yaml:"ghost_files,omitempty"`            // deprecated: use contents instead
-	Signature            NFPMRPMSignature  `yaml:"signature,omitempty"`
-	Scripts              NFPMRPMScripts    `yaml:"scripts,omitempty"`
+	Summary     string           `yaml:"summary,omitempty"`
+	Group       string           `yaml:"group,omitempty"`
+	Compression string           `yaml:"compression,omitempty"`
+	Signature   NFPMRPMSignature `yaml:"signature,omitempty"`
+	Scripts     NFPMRPMScripts   `yaml:"scripts,omitempty"`
 }
 
 // NFPMDebScripts is scripts only available on deb packages.
@@ -380,11 +381,15 @@ type NFPMDebSignature struct {
 
 // NFPMDeb is custom configs that are only available on deb packages.
 type NFPMDeb struct {
-	Scripts         NFPMDebScripts   `yaml:"scripts,omitempty"`
-	Triggers        NFPMDebTriggers  `yaml:"triggers,omitempty"`
-	Breaks          []string         `yaml:"breaks,omitempty"`
-	VersionMetadata string           `yaml:"metadata,omitempty"` // Deprecated: Moved to Info
-	Signature       NFPMDebSignature `yaml:"signature,omitempty"`
+	Scripts   NFPMDebScripts   `yaml:"scripts,omitempty"`
+	Triggers  NFPMDebTriggers  `yaml:"triggers,omitempty"`
+	Breaks    []string         `yaml:"breaks,omitempty"`
+	Signature NFPMDebSignature `yaml:"signature,omitempty"`
+}
+
+type NFPMAPKScripts struct {
+	PreUpgrade  string `yaml:"preupgrade,omitempty"`
+	PostUpgrade string `yaml:"postupgrade,omitempty"`
 }
 
 // NFPMAPKSignature contains config for signing apk packages created by nfpm.
@@ -398,6 +403,7 @@ type NFPMAPKSignature struct {
 
 // NFPMAPK is custom config only available on apk packages.
 type NFPMAPK struct {
+	Scripts   NFPMAPKScripts   `yaml:"scripts,omitempty"`
 	Signature NFPMAPKSignature `yaml:"signature,omitempty"`
 }
 
@@ -417,9 +423,6 @@ type NFPMOverridables struct {
 	Replaces         []string          `yaml:",omitempty"`
 	EmptyFolders     []string          `yaml:"empty_folders,omitempty"`
 	Contents         files.Contents    `yaml:"contents,omitempty"`
-	Files            map[string]string `yaml:",omitempty"`             // deprecated: use contents instead
-	ConfigFiles      map[string]string `yaml:"config_files,omitempty"` // deprecated: use contents instead
-	Symlinks         map[string]string `yaml:"symlinks,omitempty"`     // deprecated: use contents instead
 	Scripts          NFPMScripts       `yaml:"scripts,omitempty"`
 	RPM              NFPMRPM           `yaml:"rpm,omitempty"`
 	Deb              NFPMDeb           `yaml:"deb,omitempty"`
@@ -510,15 +513,19 @@ type Docker struct {
 	SkipPush           string   `yaml:"skip_push,omitempty"`
 	Files              []string `yaml:"extra_files,omitempty"`
 	BuildFlagTemplates []string `yaml:"build_flag_templates,omitempty"`
-	Buildx             bool     `yaml:"use_buildx,omitempty"`
+	PushFlags          []string `yaml:"push_flags,omitempty"`
+	Buildx             bool     `yaml:"use_buildx,omitempty"` // deprecated: use Use instead
+	Use                string   `yaml:"use,omitempty"`
 }
 
 // DockerManifest config.
 type DockerManifest struct {
 	NameTemplate   string   `yaml:"name_template,omitempty"`
+	SkipPush       string   `yaml:"skip_push,omitempty"`
 	ImageTemplates []string `yaml:"image_templates,omitempty"`
 	CreateFlags    []string `yaml:"create_flags,omitempty"`
 	PushFlags      []string `yaml:"push_flags,omitempty"`
+	Use            string   `yaml:"use,omitempty"`
 }
 
 // Filters config.

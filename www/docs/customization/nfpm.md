@@ -43,7 +43,8 @@ nfpms:
     # Your app's vendor.
     # Default is empty.
     vendor: Drum Roll Inc.
-    # Your app's homepage.
+
+    # Template to your app's homepage.
     # Default is empty.
     homepage: https://example.com/
 
@@ -51,7 +52,7 @@ nfpms:
     # Default is empty.
     maintainer: Drummer <drum-roll@example.com>
 
-    # Your app's description.
+    # Template to your app's description.
     # Default is empty.
     description: Software to create fast and easy drum rolls.
 
@@ -317,6 +318,13 @@ nfpms:
         type: origin
 
     apk:
+      # APK specific scripts.
+      scripts:
+        # The preupgrade script runs before APK upgrade.
+        preupgrade: ./scripts/preupgrade.sh
+        # The postupgrade script runs after APK.
+        postupgrade: ./scripts/postupgrade.sh
+
       # The package is signed if a key_file is set
       signature:
         # RSA private key in the PEM format. The passphrase is taken

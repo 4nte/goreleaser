@@ -17,6 +17,7 @@ func TestDescribeBody(t *testing.T) {
 	for _, d := range []string{
 		"goreleaser/goreleaser:0.40.0",
 		"goreleaser/goreleaser:latest",
+		"goreleaser/goreleaser",
 		"goreleaser/godownloader:v0.1.0",
 	} {
 		ctx.Artifacts.Add(&artifact.Artifact{
@@ -89,16 +90,37 @@ func TestDescribeBodyWithHeaderAndFooter(t *testing.T) {
 	ctx := context.New(config.Project{
 		Release: config.Release{
 			Header: "## Yada yada yada\nsomething\n",
-			Footer: "\n---\n\nGet GoReleaser Pro at https://goreleaser.com/pro",
+			Footer: "\n---\n\nGet images at docker.io/foo/bar:{{.Tag}}\n\n---\n\nGet GoReleaser Pro at https://goreleaser.com/pro",
 		},
 	})
 	ctx.ReleaseNotes = changelog
+	ctx.Git = context.GitInfo{CurrentTag: "v1.0"}
 	ctx.Artifacts.Add(&artifact.Artifact{
-		Name: "goreleaser/goreleaser:latest",
+		Name: "goreleaser/goreleaser:v1.2.3",
 		Type: artifact.DockerImage,
 	})
 	out, err := describeBody(ctx)
 	require.NoError(t, err)
 
 	golden.RequireEqual(t, out.Bytes())
+}
+
+func TestDescribeBodyWithInvalidHeaderTemplate(t *testing.T) {
+	ctx := context.New(config.Project{
+		Release: config.Release{
+			Header: "## {{ .Nop }\n",
+		},
+	})
+	_, err := describeBody(ctx)
+	require.EqualError(t, err, `template: tmpl:1: unexpected "}" in operand`)
+}
+
+func TestDescribeBodyWithInvalidFooterTemplate(t *testing.T) {
+	ctx := context.New(config.Project{
+		Release: config.Release{
+			Footer: "{{ .Nops }",
+		},
+	})
+	_, err := describeBody(ctx)
+	require.EqualError(t, err, `template: tmpl:1: unexpected "}" in operand`)
 }

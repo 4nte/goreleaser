@@ -9,6 +9,7 @@ goreleaser release [flags]
 ## Options
 
 ```
+      --auto-snapshot                Automatically sets --snapshot if the repo is dirty
   -f, --config string                Load configuration from file
   -h, --help                         help for release
   -k, --key string                   GoReleaser Pro license key [$GORELEASER_KEY]
@@ -36,5 +37,5 @@ goreleaser release [flags]
 
 ## See also
 
-* [goreleaser](/cmd/goreleaser)	 - Deliver Go binaries as fast and easily as possible
+* [goreleaser](/cmd/goreleaser/)	 - Deliver Go binaries as fast and easily as possible
 

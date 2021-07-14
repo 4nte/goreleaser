@@ -6,6 +6,8 @@ GoReleaser can create a GitHub/GitLab/Gitea release with the current tag, upload
 the artifacts and generate the changelog based on the new commits since the
 previous tag.
 
+## GitHub
+
 Let's see what can be customized in the `release` section for GitHub:
 
 ```yaml
@@ -13,7 +15,10 @@ Let's see what can be customized in the `release` section for GitHub:
 release:
   # Repo in which the release will be created.
   # Default is extracted from the origin remote URL or empty if its private hosted.
-  # Note: it can only be one: either github, gitlab or gitea
+  # Valid options are either github, gitlab or gitea
+  #
+  # You can also use Gitlab's internal project id by setting it in the name
+  #  field and leaving the owner field empty.
   github:
     owner: user
     name: repo
@@ -29,6 +34,10 @@ release:
   draft: true
 
   # If set, will create a release discussion in the category specified.
+  #
+  # Warning: do not use categories in the 'Announcement' format.
+  #  Check https://github.com/goreleaser/goreleaser/issues/2304 for more info.
+  #
   # Default is empty.
   discussion_category_name: General
 
@@ -38,19 +47,19 @@ release:
   # Default is false.
   prerelease: auto
 
-  # Header for the release body.
+  # Header template for the release body.
   # Defaults to empty.
   header: |
-    ## Some title
+    ## Some title ({{ .Date }})
 
     Welcome to this new release!
 
-  # Footer for the release body.
+  # Footer template for the release body.
   # Defaults to empty.
   footer: |
     ## Thanks!
 
-    Something to add to the end.
+    Those were the changes on {{ .Tag }}!
 
   # You can change the name of the release.
   # Default is `{{.Tag}}` on OSS and `{{.PrefixedTag}}` on Pro.
@@ -69,6 +78,11 @@ release:
     - glob: ./glob/**/to/**/file/**/*
     - glob: ./glob/foo/to/bar/file/foobar/override_from_previous
 ```
+
+!!! tip
+    [Learn how to setup an API token, GitHub enteprise and etc](/scm/github/).
+
+## GitLab
 
 Second, let's see what can be customized in the `release` section for GitLab.
 
@@ -106,10 +120,15 @@ release:
 ```
 
 !!! tip
+    [Learn how to setup an API token, self-hosted GitLab and etc](/scm/gitlab/).
+
+!!! tip
     If you use GitLab subgroups, you need to specify it in the `owner` field, e.g. `mygroup/mysubgroup`.
 
 !!! warning
-    Only GitLab `v12.9+` are supported for releases.
+    Only GitLab `v12.9+` is supported for releases.
+
+## Gitea
 
 You can also configure the `release` section to upload to a [Gitea](https://gitea.io) instance:
 
@@ -153,6 +172,12 @@ To enable uploading `tar.gz` and `checksums.txt` files you need to add the follo
 ALLOWED_TYPES = application/gzip|application/x-gzip|application/x-gtar|application/x-tgz|application/x-compressed-tar|text/plain
 ```
 
+!!! tip
+    [Learn how to setup an API token](/scm/gitea/).
+
+!!! tip
+    Learn more about the [name template engine](/customization/templates/).
+
 !!! warning
     Gitea versions earlier than 1.9.2 do not support uploading `checksums.txt`
     files because of a [bug](https://github.com/go-gitea/gitea/issues/7882)
@@ -160,9 +185,6 @@ ALLOWED_TYPES = application/gzip|application/x-gzip|application/x-gtar|applicati
 
 !!! warning
     `draft` and `prerelease` are only supported by GitHub and Gitea.
-
-!!! tip
-    Learn more about the [name template engine](/customization/templates/).
 
 ## Customize the changelog
 
